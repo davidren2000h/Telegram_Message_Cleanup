@@ -2,12 +2,12 @@ import asyncio
 from telethon import TelegramClient
 from telethon.tl.types import User, MessageActionContactSignUp
 
-# ====== 配置区 ======
+# ====== Configuration ======
 API_ID = 12345678
 API_HASH = "your_api_hash_here"
 SESSION_NAME = "tg_cleanup_session"
 
-DRY_RUN = True  # True = 只打印，不删除；False = 真删除
+DRY_RUN = True  # True = print only, no deletion; False = actually delete
 SKIP_BOTS = True
 # ===================
 
@@ -32,7 +32,7 @@ async def main():
     async for dialog in client.iter_dialogs():
         entity = dialog.entity
 
-        # 只处理私聊用户，不处理群、频道、自己
+        # Only process private user chats; skip groups, channels, and self
         if not isinstance(entity, User):
             continue
         if entity.is_self:
@@ -46,14 +46,14 @@ async def main():
         should_delete = False
         reason = None
 
-        # 规则 1：对方是 deleted account，直接删
+        # Rule 1: The other user is a deleted account — delete directly
         if getattr(entity, "deleted", False):
             should_delete = True
             reason = "deleted account"
             matched_deleted_account += 1
 
         else:
-            # 规则 2：只有一条消息，且是 joined Telegram
+            # Rule 2: Only one message, and it is "joined Telegram"
             msgs = []
             async for msg in client.iter_messages(entity, limit=2):
                 msgs.append(msg)
@@ -70,7 +70,7 @@ async def main():
 
             if not DRY_RUN:
                 try:
-                    # 只删除你这边的对话
+                    # Only delete the dialog on your side
                     await client.delete_dialog(entity, revoke=False)
                     deleted_dialogs += 1
                     print("  -> deleted")
